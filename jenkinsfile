@@ -5,6 +5,8 @@ agent any
 environment {
  
     IMAGE_NAME='gulshandubey/jenkinstrial'
+
+    CONTAINER_NAME = 'devops'
  
     IMAGE_TAG='latest'
  
@@ -38,26 +40,27 @@ sh 'dotnet build'
 }
 
 stage('SonarQube Analysis') {
-            environment {
-                scannerHome = tool 'sonarqube_msBuild'
-            }
-            steps {
-                script {
-                    withSonarQubeEnv('sonarqube_env') {
-                        sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin /k:\"DevOps_Assignment\""
-                        sh "dotnet build"
-                        sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
-                    }
-                }
+    environment {
+        scannerHome = tool 'sonarqube_msBuild'
+    }
+    steps {
+        script {
+            withSonarQubeEnv('sonarqube_env') {
+                sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin /k:\"DevOps_Assignment\""
+                sh "dotnet build"
+                sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
             }
         }
+    }
+}
  
+
 stage('Docker Build'){
-steps{
-script{
-docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
-}
-}
+    steps{
+        script{
+        docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
+        }
+    }
 }
  
 stage('Docker Push'){
@@ -77,18 +80,21 @@ stage('Docker Push'){
     }
  
 }
+
+
 stage('Run container') {
  
-steps {
+    steps {
  
-script{
-// sh 'docker rm -f ${IMAGE_NAME} || true '
-sh 'docker stop devops '
- sh'docker rm devops'
-    sh "docker run -d --name devops -p 8000:80 ${IMAGE_NAME}:${IMAGE_TAG}"
-}
+        script{
+            sh 'docker rm -f ${CONTAINER_NAME} || true '
+            sh 'docker rm -f ${IMAGE_NAME} || true '
+            // sh 'docker stop devops'
+            // sh 'docker rm devops'
+            sh "docker run -d --name ${CONTAINER_NAME} -p 8000:80 ${IMAGE_NAME}:${IMAGE_TAG}"
+        }
  
-}
+    }
  
 }
 }
